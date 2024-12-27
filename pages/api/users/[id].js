@@ -15,16 +15,16 @@ function handler(req, res) {
   }
 
   function getUserById() {
-    const user = usersRepo.getById(req.query.id);
-    return res.status(200).json(user);
+    const user = usersRepo.getById(req.query.id); 
+    return res.status(200).json(user); 
   }
 
   function updateUser() {
     try {
-      usersRepo.update(req.query.id, req.body);
-      return res.status(200).json({});
+      usersRepo.update(req.query.id, req.body); 
+      return res.status(200).json({}); 
     } catch (error) {
-      return res.status(400).json({ message: error });
+      return res.status(400).json({ message: error }); 
     }
   }
 
