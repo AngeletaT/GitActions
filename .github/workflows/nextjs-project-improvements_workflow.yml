@@ -1,0 +1,161 @@
+name: nextjs-project-improvements_workflow
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - README.md
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  linter_job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run linter
+        run: npm run lint
+
+  cypress_job:
+    needs: linter_job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Start Next.js server
+        run: npm run dev &
+        env:
+          PORT: 3000
+
+      - name: Wait for server to be ready
+        run: npx wait-on http://localhost:3000
+
+      - name: Run Cypress tests
+        uses: cypress-io/github-action@v4
+        with:
+          browser: chrome
+          spec: cypress/integration/1-my-tests/**/*.spec.js
+        continue-on-error: true
+
+      - name: Save Cypress results to artifact
+        run: |
+          echo "Saving Cypress results..."
+          npx cypress run --spec 'cypress/integration/1-my-tests/**/*.spec.js' > result.txt || echo "Cypress tests failed"
+        continue-on-error: true
+
+      - name: Upload Cypress artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: cypress-results
+          path: result.txt
+
+  metrics_job:
+    needs: cypress_job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate GitHub metrics
+        uses: lowlighter/metrics@latest
+        with:
+          filename: github-metrics.svg
+          token: ${{ secrets.METRICS_TOKEN }}
+          base: ""
+          plugin_languages: yes
+          plugin_languages_ignored: >-
+            html, css, tex, less, dockerfile, makefile, qmake, lex, cmake, shell,
+            gnuplot
+          plugin_languages_limit: 4
+
+      - name: Update README with metrics
+        run: |
+          echo "Updating README.md with metrics..."
+          awk '/## Resultados de Métricas/ {print; print "![Metrics](github-metrics.svg)"; next} 1' README.md > temp.md && mv temp.md README.md
+          git config --global user.email "alvgarcam@alu.edu.gva.es"
+          git config --global user.name "AlvaroGarCam"
+          git add README.md
+          git commit -m "Update README.md with static GitHub metrics" || echo "No changes to commit"
+          git fetch origin main
+          git rebase origin/main || (git rebase --abort && echo "Rebase failed; skipping pull step")
+          git push origin main || echo "Push failed; skipping push"
+
+  add_badge_job:
+    needs: metrics_job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Download Cypress artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: cypress-results
+
+      - name: Determine Cypress result
+        id: read_result
+        run: |
+          echo "Reading Cypress result..."
+          if grep -q "failure" result.txt; then
+            echo "CYPRESS_OUTCOME=failure" >> $GITHUB_ENV
+          else
+            echo "CYPRESS_OUTCOME=success" >> $GITHUB_ENV
+          fi
+
+      - name: Update README with badge
+        run: |
+          echo "Updating README.md with badge..."
+          awk '/## Resultados de los Últimos Tests/ {print; print ($CYPRESS_OUTCOME == "failure" ? "![Test Badge](https://img.shields.io/badge/test-failure-red)" : "![Test Badge](https://img.shields.io/badge/tested%20with-Cypress-04C38E.svg)"); next} 1' README.md > temp.md && mv temp.md README.md
+          git config --global user.email "alvgarcam@alu.edu.gva.es"
+          git config --global user.name "AlvaroGarCam"
+          git add README.md
+          git commit -m "Update README.md with Cypress test results" || echo "No changes to commit"
+          git fetch origin main
+          git rebase origin/main || (git rebase --abort && echo "Rebase failed; skipping rebase")
+          git push origin main || echo "Push failed; skipping push"
+
+  deploy_job:
+    needs: add_badge_job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.ORG_ID }}
+          vercel-project-id: ${{ secrets.PROJECT_ID }}
+          vercel-args: "--prod"
+
+  notification_job:
+    needs: [linter_job, cypress_job, add_badge_job, deploy_job, metrics_job]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Send Telegram Notification
+        run: |
+          echo "Preparing Telegram notification..."
+          JOB_RESULTS="S'ha realitzat un push en la branca main que ha provocat l'execució del workflow nextjs-project-improvements_workflow amb els següents resultats:\n\n"
+          JOB_RESULTS+=" - linter_job: ${{ needs.linter_job.result }}\n"
+          JOB_RESULTS+=" - cypress_job: ${{ needs.cypress_job.result }}\n"
+          JOB_RESULTS+=" - add_badge_job: ${{ needs.add_badge_job.result }}\n"
+          JOB_RESULTS+=" - deploy_job: ${{ needs.deploy_job.result }}\n"
+          JOB_RESULTS+=" - metrics_job: ${{ needs.metrics_job.result }}\n"
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" \
+            -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+            -d text="$(echo -e "$JOB_RESULTS")"
