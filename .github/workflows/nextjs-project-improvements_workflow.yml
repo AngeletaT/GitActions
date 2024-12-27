@@ -10,6 +10,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   linter_job:
     runs-on: ubuntu-latest
