@@ -83,8 +83,8 @@ jobs:
         run: |
           echo "Updating README.md with metrics..."
           awk '/## Resultados de Métricas/ {print; print "![Metrics](github-metrics.svg)"; next} 1' README.md > temp.md && mv temp.md README.md
-          git config --global user.email "alvgarcam@alu.edu.gva.es"
-          git config --global user.name "AlvaroGarCam"
+          git config --global user.email "a.torroballester@gmail.com"
+          git config --global user.name "AngeletaT"
           git add README.md
           git commit -m "Update README.md with static GitHub metrics" || echo "No changes to commit"
           git fetch origin main
@@ -119,8 +119,8 @@ jobs:
         run: |
           echo "Updating README.md with badge..."
           awk '/## Resultados de los Últimos Tests/ {print; print ($CYPRESS_OUTCOME == "failure" ? "![Test Badge](https://img.shields.io/badge/test-failure-red)" : "![Test Badge](https://img.shields.io/badge/tested%20with-Cypress-04C38E.svg)"); next} 1' README.md > temp.md && mv temp.md README.md
-          git config --global user.email "alvgarcam@alu.edu.gva.es"
-          git config --global user.name "AlvaroGarCam"
+          git config --global user.email "a.torroballester@gmail.com"
+          git config --global user.name "AngeletaT"
           git add README.md
           git commit -m "Update README.md with Cypress test results" || echo "No changes to commit"
           git fetch origin main
