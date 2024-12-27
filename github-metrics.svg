@@ -21,10 +21,10 @@
                         <rect x="0" y="0" width="460" height="8" fill="white" rx="5"/>
                     </mask>
                     <rect mask="url(#languages-bar)" x="0" y="0" width="0" height="8" fill="#d1d5da"/>
-                    <rect mask="url(#languages-bar)" x="0" y="0" width="213.47514841112792" height="8" fill="#f1e05a"/>
-                    <rect mask="url(#languages-bar)" x="213.47514841112792" y="0" width="145.76126178558957" height="8" fill="#4F5D95"/>
-                    <rect mask="url(#languages-bar)" x="359.23641019671754" y="0" width="90.15539518100337" height="8" fill="#3178c6"/>
-                    <rect mask="url(#languages-bar)" x="449.39180537772086" y="0" width="10.60819462227913" height="8" fill="#f7523f"/>
+                    <rect mask="url(#languages-bar)" x="0" y="0" width="203.44349150550622" height="8" fill="#f1e05a"/>
+                    <rect mask="url(#languages-bar)" x="203.44349150550622" y="0" width="148.4402510648063" height="8" fill="#4F5D95"/>
+                    <rect mask="url(#languages-bar)" x="351.8837425703125" y="0" width="89.84216405960393" height="8" fill="#3178c6"/>
+                    <rect mask="url(#languages-bar)" x="441.7259066299165" y="0" width="18.274093370083545" height="8" fill="#878787"/>
                 </svg>
                 <div class="field center horizontal-wrap fill-width">
                     <div class="field center no-wrap language">
@@ -47,9 +47,9 @@
                     </div>
                     <div class="field center no-wrap language">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
-                            <path fill="#f7523f" fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8z"/>
+                            <path fill="#878787" fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8z"/>
                         </svg>
-                        Blade
+                        Hack
                     </div>
                 </div>
             </section>
